@@ -5,9 +5,6 @@
 #include <string.h>
 #include <zlib.h>
 #include <pthread.h>
-#ifdef __unix__
-#include <unistd.h>
-#endif
 
 #define BUFFER_SIZE 1048576 // 1MB
 #define MAX_WORKER_THREADS 19 // including main => total <= 20
@@ -152,10 +149,8 @@ void compress_directory(char *directory_name) {
 
 	int worker_count = nfiles;
 	if (worker_count > MAX_WORKER_THREADS) worker_count = MAX_WORKER_THREADS;
-#ifdef __unix__
-	long cores = sysconf(_SC_NPROCESSORS_ONLN);
-	if (cores > 0 && worker_count > (int)cores) worker_count = (int)cores; // cap to CPU cores
-#endif
+	int cores = 4;
+	if (worker_count > cores) worker_count = cores;
 	if (worker_count < 1) worker_count = 1; // still run writer path cleanly
 
 	pthread_t *threads = (pthread_t *)malloc(sizeof(pthread_t) * worker_count);
